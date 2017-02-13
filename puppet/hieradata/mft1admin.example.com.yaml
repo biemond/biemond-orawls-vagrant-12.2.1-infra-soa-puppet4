@@ -1,0 +1,62 @@
+---
+
+wls_os_user:              &wls_os_user              "oracle"
+wls_weblogic_user:        &wls_weblogic_user        "weblogic"
+
+wls_weblogic_home_dir:    &wls_weblogic_home_dir    "/opt/oracle/middleware12c/wlserver"
+wls_middleware_home_dir:  &wls_middleware_home_dir  "/opt/oracle/middleware12c"
+wls_version:              &wls_version              12211
+wls_domains_dir:          &wls_domains_dir          '/opt/oracle/wlsdomains/domains'
+wls_apps_dir:             &wls_apps_dir             '/opt/oracle/wlsdomains/applications'
+
+wls_domains_dir:          &wls_domains_dir          '/opt/oracle/wlsdomains/domains'
+wls_apps_dir:             &wls_apps_dir             '/opt/oracle/wlsdomains/applications'
+wls_oracle_base_home_dir: &wls_oracle_base_home_dir "/opt/oracle"
+
+wls_jsse_enabled:         &wls_jsse_enabled         true
+wls_log_dir:              &wls_log_dir              "/var/log/weblogic"
+
+
+orautils::osMdwHomeParam:         *wls_middleware_home_dir
+orautils::osWlHomeParam:          *wls_weblogic_home_dir
+
+orautils::osDomainTypeParam:      "admin"
+orautils::osDomainParam:          "mft_domain"
+orautils::osDomainPathParam:      "/opt/oracle/wlsdomains/domains/mft_domain"
+orautils::nodeMgrPathParam:       "/opt/oracle/wlsdomains/domains/mft_domain/bin"
+
+orautils::nodeMgrPortParam:       5556
+orautils::nodeMgrAddressParam:    '10.10.10.71'
+orautils::wlsUserParam:           "weblogic"
+orautils::wlsPasswordParam:       "weblogic1"
+orautils::wlsAdminServerParam:    "AdminServer"
+
+logoutput:                     &logoutput                     true
+
+# FMW installation on top of WebLogic 12.2.1.1
+fmw_installations:
+  'mft1221':
+    fmw_product:             "mft"
+    fmw_file1:               "fmw_12.2.1.1.0_mft_Disk1_1of1.zip"
+    oracle_base_home_dir:      *wls_oracle_base_home_dir
+
+# when you have just one domain on a server
+domain_name:                "mft_domain"
+domain_adminserver:         "AdminServer"
+domain_adminserver_address: "10.10.10.71"
+domain_adminserver_port:    7001
+domain_nodemanager_port:    5556
+domain_wls_password:        "weblogic1"
+domain_user_config_file:    "/home/oracle/oracle-mft_domain-WebLogicConfig.properties"
+domain_user_key_file:       "/home/oracle/oracle-mft_domain-WebLogicKey.properties"
+
+rcu_instances:
+  'mftrepos':
+    fmw_product:                 'mft'
+    oracle_fmw_product_home_dir: "/opt/oracle/middleware12c/oracle_common"
+    rcu_database_url:            "soadb.example.com:1521:soarepos.example.com"
+    rcu_prefix:                  "DEV2"
+    rcu_password:                "Welcome01"
+    rcu_sys_password:            "Welcome01"
+    log_output:                  true
+
