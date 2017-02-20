@@ -51,9 +51,9 @@ If you need support, checkout the [wls_install](https://www.enterprisemodules.co
 - WebLogic 12.2.1.2 infra (JRF + JRF restricted), the vagrant test case for full working WebLogic 12.2.1 infra cluster example with WebTier (Oracle HTTP Server) [biemond-orawls-vagrant-12.2.1-infra-puppet4](https://github.com/biemond/biemond-orawls-vagrant-12.2.1-infra-puppet4)
 - WebLogic 12.2.1.2 infra (JRF + JRF restricted), the vagrant test case for full working WebLogic 12.2.1 infra SOA Suite/BAM/OSB cluster example [biemond-orawls-vagrant-12.2.1-infra-soa-puppet](https://github.com/biemond/biemond-orawls-vagrant-12.2.1-infra-soa-puppet4)
 - WebLogic OHS webtier standalone, the vagrant test case for full working Webtier 12.1.2 and 12.2.1 [biemond-orawls-vagrant-ohs-puppet4](https://github.com/biemond/biemond-orawls-vagrant-ohs-puppet4)
-- Reference OIM / OAM with WebTier, Webgate & Oracle Unified Directory, the vagrant test case for Oracle Identity Manager & Oracle Access Manager 11.1.2.3 example [biemond-orawls-vagrant-oim_oam](https://github.com/biemond/biemond-orawls-vagrant-oim_oam)
+- Reference OIM / OAM with WebTier, Webgate & Oracle Unified Directory, the vagrant test case for Oracle Identity Manager & Oracle Access Manager 11.1.2.3 example [biemond-orawls-vagrant-oim_oam-puppet](https://github.com/biemond/biemond-orawls-vagrant-oim_oam-puppet4)
 - Reference OIM / OAM Cluster, the vagrant test case for Oracle Identity Manager & Oracle Access Manager 11.1.2.3 cluster example [biemond-orawls-vagrant-oim_oam_cluster](https://github.com/biemond/biemond-orawls-vagrant-oim_oam_cluster)
-- Oracle Forms, Reports 11.1.1.7 & 11.1.2 Reference implementation, the vagrant test case [biemond-orawls-vagrant-11g-forms](https://github.com/biemond/biemond-orawls-vagrant-11g-forms)
+- Oracle Forms, Reports 11.1.1.7 & 11.1.2 Reference implementation, the vagrant test case [biemond-orawls-vagrant-11g-forms-puppet4](https://github.com/biemond/biemond-orawls-vagrant-11g-forms-puppet4)
 
 
 ## Orawls WebLogic Features
@@ -512,19 +512,35 @@ or with a bin file located on a share
 ### weblogic_type
 __orawls::weblogic_type__ same as weblogic manifest/class but now as define which supports multiple middleware home on same VM
 
-    orawls::weblogic{'1221':
-      version                   => 12211,                       # 1036|1211|1212|1213|1221|12212
-      filename                  => 'fmw_12.2.1.0.0_wls.jar',   # wls1036_generic.jar|wls1211_generic.jar|wls_121200.jar
-      jdk_home_dir              => '/usr/java/jdk1.8.0_45',
-      oracle_base_home_dir      => "/opt/oracle",
-      middleware_home_dir       => "/opt/oracle/middleware12c",
-      weblogic_home_dir         => "/opt/oracle/middleware12c/wlserver",
-      os_user                   => "oracle",
-      os_group                  => "dba",
-      download_dir              => "/data/install",
-      puppet_download_mnt_point => "/vagrant",                 # puppet:///modules/orawls/ | /mnt |
-      log_output                => true,
-    }
+    $default_params = {}
+    $weblogic_instances = hiera('weblogic_instances', {})
+    create_resources('orawls::weblogic_type',$weblogic_instances, $default_params)
+
+    weblogic_instances:
+      'home1':
+        version:                     *wls_version
+        filename:                    'fmw_12.2.1.2.0_wls.jar'
+        middleware_home_dir:         *wls_middleware_home_dir
+        log_output:                  true
+        jdk_home_dir:                *wls_jdk_home_dir
+        oracle_base_home_dir:        *wls_oracle_base_home_dir
+        puppet_download_mnt_point:   '/vagrant'
+        remote_file:                 true
+        wls_domains_dir:             *wls_domains_dir
+        wls_apps_dir:                *wls_apps_dir
+        require:                     Jdk7::Install7[jdk-8u72-linux-x64]
+      'home2':
+        version:                      *wls_version
+        filename:                     'fmw_12.2.1.2.0_wls.jar'
+        middleware_home_dir:          '/opt/oracle/middleware12c_2'
+        log_output:                   true
+        jdk_home_dir:                 *wls_jdk_home_dir
+        oracle_base_home_dir:         *wls_oracle_base_home_dir
+        puppet_download_mnt_point:    '/vagrant'
+        remote_file:                  true
+        wls_domains_dir:              *wls_domains_dir
+        wls_apps_dir:                 *wls_apps_dir
+        require:                      Jdk7::Install7[jdk-8u72-linux-x64]
 
 
 ### opatch
@@ -691,6 +707,26 @@ Most general parameters are derived from weblogic.pp, you don't need to specify 
 	    download_dir:              *wls_download_dir
 	    puppet_download_mnt_point: *wls_source
 
+    fmw_installations:
+      'webTierPS8':
+        version:                 1111
+        fmw_product:             "web"
+        fmw_file1:               "ofm_webtier_linux_11.1.1.9.0_64_disk1_1of1.zip"
+        oracle_base_home_dir:    *wls_oracle_base_home_dir
+      'forms11112':
+        version:                 11112
+        fmw_product:             "forms"
+        fmw_file1:               "V18772-01_1of4.zip"
+        fmw_file2:               "V18772-01_2of4.zip"
+        fmw_file3:               "V18772-01_3of4.zip"
+        fmw_file4:               "V18772-01_4of4.zip"
+        oracle_base_home_dir:    *wls_oracle_base_home_dir
+      'forms1112':
+        version:                 1112
+        fmw_product:             "forms"
+        fmw_file1:               "ofm_frmrpts_linux_11.1.2.2.0_64_disk1_1of2.zip"
+        fmw_file2:               "ofm_frmrpts_linux_11.1.2.2.0_64_disk1_2of2.zip"
+        oracle_base_home_dir:    *wls_oracle_base_home_dir
 
 
 
@@ -1368,7 +1404,6 @@ __orawls::utils::webtier__ add an OHS instance to a WebLogic Domain and in the E
     $webtier_instances = hiera('webtier_instances', {})
     create_resources('orawls::utils::webtier',$webtier_instances, $default_params)
 
-hiera configuration
 
     # 11g
     webtier_instances:
@@ -1376,7 +1411,9 @@ hiera configuration
         action_name:           'create'
         instance_name:         'ohs1'
         webgate_configure:     true
-        log_output:            *logoutput
+        domain_name:             *domain_name
+        adminserver_address:     *domain_adminserver_address
+        weblogic_password:       *domain_wls_password          
 
     # 12.1.2
       webtier_instances:
@@ -1384,6 +1421,10 @@ hiera configuration
           action_name:           'create'
           instance_name:         'ohs1'
           machine_name:          'Node1'
+          domain_name:             *domain_name
+          adminserver_address:     *domain_adminserver_address
+          weblogic_password:       *domain_wls_password          
+
 
 Webtier for OAM
 
@@ -1395,8 +1436,11 @@ Webtier for OAM
         webgate_agentname:      'ohs1'
         webgate_hostidentifier: 'host1'
         oamadminserverhostname: 'oim1admin.example.com'
-        oamadminserverport:     '7001'
-        log_output:             *logoutput
+        oamadminserverport:     7001
+        domain_name:             *domain_name
+        adminserver_address:     *domain_adminserver_address
+        weblogic_password:       *domain_wls_password          
+
 
 ### oimconfig
 __orawls::utils::oimconfig__ Configure OIM , oim server, design or remote configuration
@@ -1411,18 +1455,18 @@ __orawls::utils::oimconfig__ Configure OIM , oim server, design or remote config
         oim_home:                   '/opt/oracle/middleware11g/Oracle_IDM1'
         server_config:              true
         oim_password:               'Welcome01'
-        bi_cluster_name:            'BiCluster'
-        bi_enabled:                 true
         remote_config:              false
         keystore_password:          'Welcome01'
         design_config:              false
         oimserver_hostname:         'oim1admin.example.com'
-        oimserver_port:             '14000'
-        soaserver_name:             'SoaServer1'
-        oimserver_name:             'OimServer1'
+        oimserver_port:             14000
         repository_database_url:    "oimdb.example.com:1521:oimrepos.example.com"
-        repository_prefix:          *rcu_prefix
+        repository_prefix:          "DEV"
         repository_password:        "Welcome01"
+        domain_name:                *domain_name
+        adminserver_address:        *domain_adminserver_address
+        weblogic_password:          *domain_wls_password    
+
 
 ### instance
 __orawls::oud::instance__ Configure OUD (Oracle Unified Directory) ldap instance
@@ -1433,25 +1477,14 @@ __orawls::oud::instance__ Configure OUD (Oracle Unified Directory) ldap instance
 
     oudconfig_instances:
       'instance1':
-        version:                    1112
-        oud_home:                   '/opt/oracle/middleware11g/Oracle_OUD1'
-        oud_instance_name:          'instance1'
-        oud_root_user_password:     'Welcome01'
-        oud_baseDN:                 'dc=example,dc=com'
-        oud_ldapPort:               1389
-        oud_adminConnectorPort:     4444
-        oud_ldapsPort:              1636
-        log_output:                 *logoutput
-      'instance2':
-        version:                    1112
-        oud_home:                   '/opt/oracle/middleware11g/Oracle_OUD1'
-        oud_instance_name:          'instance2'
-        oud_root_user_password:     'Welcome01'
-        oud_baseDN:                 'dc=example,dc=com'
-        oud_ldapPort:               2389
-        oud_adminConnectorPort:     5555
-        oud_ldapsPort:              2636
-        log_output:                 *logoutput
+        version:                     1112
+        oud_home:                    '/opt/oracle/middleware11g/Oracle_OUD1'
+        oud_instance_name:           'instance1'
+        oud_root_user_password:      'Welcome01'
+        oud_base_dn:                 'dc=example,dc=com'
+        oud_ldap_port:               1389
+        oud_admin_connector_port:    4444
+        oud_ldaps_port:              1636
 
 ### oud_control
 __orawls::oud::control__ Stop or start an OUD (Oracle Unified Directory) ldap instance
