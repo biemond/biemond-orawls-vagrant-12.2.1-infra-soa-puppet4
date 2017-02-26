@@ -8,10 +8,11 @@ node 'soadb.example.com' {
 # operating settings for Database & Middleware
 class oradb_os {
 
-  # class { 'swap_file':
-  #   swapfile     => '/var/swap.1',
-  #   swapfilesize => '8192000000'
-  # }
+  swap_file::files { 'swap_file':
+    ensure       => present,
+    swapfilesize => '8 GB',
+    swapfile     => '/data/swap.1' 
+  }
 
   $host_instances = hiera('hosts', {})
   create_resources('host',$host_instances)

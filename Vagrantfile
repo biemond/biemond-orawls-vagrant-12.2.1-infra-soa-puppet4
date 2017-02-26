@@ -8,14 +8,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.define "soa2admin2" , primary: true do |soa2admin2|
 
-    soa2admin2.vm.box = "centos-7-1511-x86_64"
-    soa2admin2.vm.box_url = "https://dl.dropboxusercontent.com/s/filvjntyct1wuxe/centos-7-1511-x86_64.box"
+    soa2admin2.vm.box = "centos-7-1611-x86_64"
+    soa2admin2.vm.box_url = "https://dl.dropboxusercontent.com/s/e7o5lvlpletkp2i/centos-7-1611-x86_64.box"
 
     soa2admin2.vm.provider :vmware_fusion do |v, override|
-      override.vm.box = "centos-7-1511-x86_64-vmware"
-      override.vm.box_url = "https://dl.dropboxusercontent.com/s/h5g5kqjrzq5dn53/centos-7-1511-x86_64-vmware.box"
-      #override.vm.box = "OEL7_2-x86_64-vmware"
-      #override.vm.box_url = "https://dl.dropboxusercontent.com/s/ymr62ku2vjjdhup/OEL7_2-x86_64-vmware.box"
+      override.vm.box = "centos-7-1611-x86_64-vmware"
+      override.vm.box_url = "https://dl.dropboxusercontent.com/s/6hqh2ntbiyu3srt/centos-7-1611-x86_64-vmware.box"
     end
 
     soa2admin2.vm.hostname = "soa2admin2.example.com"
@@ -66,14 +64,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.define "mft1admin" , primary: true do |mft1admin|
 
-    mft1admin.vm.box = "centos-7-1511-x86_64"
-    mft1admin.vm.box_url = "https://dl.dropboxusercontent.com/s/filvjntyct1wuxe/centos-7-1511-x86_64.box"
+    mft1admin.vm.box = "centos-7-1611-x86_64"
+    mft1admin.vm.box_url = "https://dl.dropboxusercontent.com/s/e7o5lvlpletkp2i/centos-7-1611-x86_64.box"
 
     mft1admin.vm.provider :vmware_fusion do |v, override|
-      override.vm.box = "centos-7-1511-x86_64-vmware"
-      override.vm.box_url = "https://dl.dropboxusercontent.com/s/h5g5kqjrzq5dn53/centos-7-1511-x86_64-vmware.box"
-      #override.vm.box = "OEL7_2-x86_64-vmware"
-      #override.vm.box_url = "https://dl.dropboxusercontent.com/s/ymr62ku2vjjdhup/OEL7_2-x86_64-vmware.box"
+      override.vm.box = "centos-7-1611-x86_64-vmware"
+      override.vm.box_url = "https://dl.dropboxusercontent.com/s/6hqh2ntbiyu3srt/centos-7-1611-x86_64-vmware.box"
     end
 
     mft1admin.vm.hostname = "mft1admin.example.com"
@@ -124,14 +120,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.define "soadb" , primary: true do |soadb|
 
-    soadb.vm.box = "centos-7-1511-x86_64"
-    soadb.vm.box_url = "https://dl.dropboxusercontent.com/s/filvjntyct1wuxe/centos-7-1511-x86_64.box"
+    soadb.vm.box = "centos-7-1611-x86_64"
+    soadb.vm.box_url = "https://dl.dropboxusercontent.com/s/e7o5lvlpletkp2i/centos-7-1611-x86_64.box"
 
     soadb.vm.provider :vmware_fusion do |v, override|
-      override.vm.box = "centos-7-1511-x86_64-vmware"
-      override.vm.box_url = "https://dl.dropboxusercontent.com/s/h5g5kqjrzq5dn53/centos-7-1511-x86_64-vmware.box"
-      #override.vm.box = "OEL7_2-x86_64-vmware"
-      #override.vm.box_url = "https://dl.dropboxusercontent.com/s/ymr62ku2vjjdhup/OEL7_2-x86_64-vmware.box"
+      override.vm.box = "centos-7-1611-x86_64-vmware"
+      override.vm.box_url = "https://dl.dropboxusercontent.com/s/6hqh2ntbiyu3srt/centos-7-1611-x86_64-vmware.box"
     end
 
     soadb.vm.hostname = "soadb.example.com"

@@ -31,10 +31,11 @@ class os {
   $host_instances = hiera('hosts', {})
   create_resources('host',$host_instances, $default_params)
 
-  # class { 'swap_file':
-  #   swapfile     => '/var/swap.1',
-  #   swapfilesize => '8192000000'
-  # }
+  swap_file::files { 'swap_file':
+    ensure       => present,
+    swapfilesize => '8 GB',
+    swapfile     => '/data/swap.1' 
+  }
 
   service { iptables:
         enable    => false,
@@ -148,10 +149,10 @@ class java {
 
   include jdk7
 
-  jdk7::install7{ 'jdk-8u65-linux-x64':
-      version                     => "8u65" ,
-      full_version                => "jdk1.8.0_65",
-      alternatives_priority       => 18000,
+  jdk7::install7{ 'jdk-8u121-linux-x64':
+      version                     => "8u121" ,
+      full_version                => "jdk1.8.0_121",
+      alternatives_priority       => 18001,
       x64                         => true,
       download_dir                => "/var/tmp/install",
       urandom_java_fix            => true,

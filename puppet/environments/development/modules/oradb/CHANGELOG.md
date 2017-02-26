@@ -1,5 +1,18 @@
 # Version updates
 
+## 3.0.3
+- added docs
+- added goldengate 12.2.1 for Oracle Database
+- 12.2.0.1 installdb + database + pluggable db support
+- 12.2.0.1 client support
+
+## 3.0.2
+- migrated to puppet 4 functions
+- Fix ASM disk does not exist error during database creation
+
+## 3.0.1
+- Epp template fixes for optional fields on grid, installdb & database.pp
+
 ## 3.0.0
 - Puppet 4 new features, removed support for Puppet 3, please use latest version 2.X of oradb
 

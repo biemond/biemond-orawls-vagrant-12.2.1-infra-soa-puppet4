@@ -10,8 +10,8 @@ gem 'codeclimate-test-reporter', :require => false
 
 gem 'rspec-puppet-utils', :git => 'https://github.com/Accuity/rspec-puppet-utils.git'
 gem 'hiera-puppet-helper', :git => 'https://github.com/bobtfish/hiera-puppet-helper.git'
-gem 'puppet-lint'
-gem 'puppet', puppetversion
+gem 'puppet-lint', :git => 'https://github.com/rodjek/puppet-lint'
+gem 'puppet', '4.8.2' #puppetversion
 gem 'rspec-puppet'
 gem 'rspec-system-puppet'
 gem 'puppetlabs_spec_helper'
@@ -23,3 +23,4 @@ gem 'puppet-blacksmith'
 #gem 'fog', '>= 1.25.0'
 #gem 'fog-google', '= 0.1.0'
 #gem 'tins', '= 1.6.0'
+gem 'puppet-strings'

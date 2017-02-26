@@ -1,30 +1,79 @@
-# == Class: oradb::client
+# client
 #
+# installs oracle client
+#
+# @example example installation of oracle client
+#    oradb::client{ '12.1.0.1_Linux-x86-64':
+#      version                   => '12.1.0.1',
+#      file                      => 'linuxamd64_12c_client.zip',
+#      oracle_base               => '/oracle',
+#      oracle_home               => '/oracle/product/12.1/client',
+#      user                      => 'oracle',
+#      group                     => 'dba',
+#      group_install             => 'oinstall',
+#      download_dir              => '/install',
+#      bash_profile              => true,
+#      remote_file               => true,
+#      puppet_download_mnt_point => "puppet:///modules/oradb/",
+#      log_output                => true,
+#    }
+#
+#    oradb::client{ '11.2.0.1_Linux-x86-64':
+#      version                   => '11.2.0.1',
+#      file                      => 'linux.x64_11gR2_client.zip',
+#      oracle_base               => '/oracle',
+#      oracle_home               => '/oracle/product/11.2/client',
+#      user                      => 'oracle',
+#      group                     => 'dba',
+#      group_install             => 'oinstall',
+#      download_dir              => '/install',
+#      bash_profile              => true,
+#      remote_file               => false,
+#      puppet_download_mnt_point => "/software",
+#      log_output                => true,
+#    }
+#
+# @param version Oracle installation version
+# @param file filename of the installation software
+# @param oracle_base full path to the Oracle Base directory
+# @param oracle_home full path to the Oracle Home directory inside Oracle Base
+# @param ora_inventory_dir full path to the Oracle Inventory location directory
+# @param db_port database listener port number
+# @param user operating system user
+# @param user_base_dir the location of the base user homes
+# @param group the operating group name for using the oracle software
+# @param group_install the operating group name for the installed software
+# @param download_dir location for installation files used by this module
+# @param bash_profile add a bash profile to the operating user
+# @param puppet_download_mnt_point the location where the installation software is available
+# @param remote_file the installation is remote accessiable or not
+# @param log_output log all output
+# @param temp_dir location for temporaray file used by the installer
 #
 define oradb::client(
-  String $version                     = undef,
-  String $file                        = undef,
-  String $oracle_base                 = undef,
-  String $oracle_home                 = undef,
-  Optional[String] $ora_inventory_dir = undef,
-  Integer $db_port                    = lookup('oradb::listener_port'),
-  String $user                        = lookup('oradb::user'),
-  String $user_base_dir               = lookup('oradb::user_base_dir'),
-  String $group                       = lookup('oradb::group'),
-  String $group_install               = lookup('oradb::group_install'),
-  String $download_dir                = lookup('oradb::download_dir'),
-  Boolean $bash_profile               = true,
-  String $puppet_download_mnt_point   = lookup('oradb::module_mountpoint'),
-  Boolean $remote_file                = true,
-  Boolean $logoutput                  = true,
-  String $temp_dir                    = '/tmp',
+  Enum['11.2.0.1','11.2.0.3','11.2.0.4','12.1.0.1','12.1.0.2','12.2.0.1'] $version = undef,
+  String $file                                                                     = undef,
+  String $oracle_base                                                              = undef,
+  String $oracle_home                                                              = undef,
+  Optional[String] $ora_inventory_dir                                              = undef,
+  Integer $db_port                                                                 = lookup('oradb::listener_port'),
+  String $user                                                                     = lookup('oradb::user'),
+  String $user_base_dir                                                            = lookup('oradb::user_base_dir'),
+  String $group                                                                    = lookup('oradb::group'),
+  String $group_install                                                            = lookup('oradb::group_install'),
+  String $download_dir                                                             = lookup('oradb::download_dir'),
+  Boolean $bash_profile                                                            = true,
+  String $puppet_download_mnt_point                                                = lookup('oradb::module_mountpoint'),
+  Boolean $remote_file                                                             = true,
+  Boolean $log_output                                                              = true,
+  String $temp_dir                                                                 = lookup('oradb::tmp_dir'),
 )
 {
   validate_absolute_path($oracle_home)
   validate_absolute_path($oracle_base)
 
   # check if the oracle software already exists
-  $found = oracle_exists( $oracle_home )
+  $found = oradb::oracle_exists( $oracle_home )
 
   if $found == undef {
     $continue = true
@@ -38,16 +87,16 @@ define oradb::client(
   }
 
   if $ora_inventory_dir == undef {
-    $oraInventory = pick($::oradb_inst_loc_data, oradb_cleanpath("${oracle_base}/../oraInventory"))
+    $ora_inventory = oradb::cleanpath("${oracle_base}/../oraInventory")
   } else {
     validate_absolute_path($ora_inventory_dir)
-    $oraInventory = "${ora_inventory_dir}/oraInventory"
+    $ora_inventory = "${ora_inventory_dir}/oraInventory"
   }
 
   db_directory_structure{"client structure ${version}":
     ensure            => present,
     oracle_base_dir   => $oracle_base,
-    ora_inventory_dir => $oraInventory,
+    ora_inventory_dir => $ora_inventory,
     download_dir      => $download_dir,
     os_user           => $user,
     os_group          => $group_install,
@@ -83,18 +132,18 @@ define oradb::client(
     }
 
     oradb::utils::dborainst{"oracle orainst ${version}":
-      ora_inventory_dir => $oraInventory,
+      ora_inventory_dir => $ora_inventory,
       os_group          => $group_install,
     }
 
     if ! defined(File["${download_dir}/db_client_${version}.rsp"]) {
       file { "${download_dir}/db_client_${version}.rsp":
         ensure  => present,
-        content => epp("oradb/db_client_${version}.rsp.epp",
-                      { 'group_install'=> $group_install,
-                        'oraInventory' => $oraInventory,
-                        'oracle_home'  => $oracle_home,
-                        'oracle_base'  => $oracle_base }),
+        content => epp("oradb/db_client_${version}.rsp.epp", {
+                        'group_install' => $group_install,
+                        'oraInventory'  => $ora_inventory,
+                        'oracle_home'   => $oracle_home,
+                        'oracle_base'   => $oracle_base }),
         mode    => '0775',
         owner   => $user,
         group   => $group,
@@ -115,7 +164,7 @@ define oradb::client(
       path        => $exec_path,
       user        => $user,
       group       => $group_install,
-      logoutput   => $logoutput,
+      logoutput   => $log_output,
       environment => "TEMP=${temp_dir}",
     }
 
@@ -125,7 +174,7 @@ define oradb::client(
       group     => 'root',
       require   => Exec["install oracle client ${title}"],
       path      => $exec_path,
-      logoutput => $logoutput,
+      logoutput => $log_output,
     }
 
     file { "${download_dir}/netca_client_${version}.rsp":
@@ -144,7 +193,7 @@ define oradb::client(
       path      => $exec_path,
       user      => $user,
       group     => $group,
-      logoutput => $logoutput,
+      logoutput => $log_output,
     }
 
     if ( $bash_profile == true ) {
