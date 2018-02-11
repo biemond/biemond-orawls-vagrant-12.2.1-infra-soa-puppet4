@@ -46,14 +46,15 @@ Puppet::Type.type(:db_opatch).provide(:db_opatch) do
     if opatch_auto == true
       output = `export ORACLE_HOME=#{oracle_product_home_dir}; chmod -R +r #{extracted_patch_dir}; cd #{oracle_product_home_dir}; #{command}`
     else
-      output = `su - #{user} -c 'export ORACLE_HOME=#{oracle_product_home_dir}; chmod -R +r #{extracted_patch_dir}; cd #{oracle_product_home_dir}; #{command}'`
+      output2 = `chmod -R +r #{extracted_patch_dir}`
+      output = `su - #{user} -c 'export ORACLE_HOME=#{oracle_product_home_dir}; cd #{oracle_product_home_dir}; #{command}'`
     end
     Puppet.info "opatch result: #{output}"
 
     result = false
     output.each_line do |li|
       unless li.nil?
-        if li.include? 'OPatch completed' or li.include? 'OPatch succeeded' or li.include? 'opatch auto succeeded' or li.include? 'opatchauto succeeded'
+        if li.include? 'OPatch completed' or li.include? 'OPatch succeeded' or li.include? 'opatch auto succeeded' or li.include? 'opatchauto succeeded' or li.include?  'OPatchAuto successful' or li.include? 'Patching is completed successfully'
           result = true
         end
       end

@@ -49,7 +49,7 @@
 define oradb::installdb(
   Enum['11.2.0.1','11.2.0.3','11.2.0.4','12.1.0.1','12.1.0.2','12.2.0.1'] $version = undef,
   String $file                                                                     = undef,
-  Enum['SE', 'EE', 'SEONE'] $database_type                                         = lookup('oradb:installdb:database_type'),
+  Enum['SE', 'EE', 'SEONE', 'SE2', 'HP', 'XP', 'PE'] $database_type                = lookup('oradb:installdb:database_type'),
   Optional[String] $ora_inventory_dir                                              = undef,
   String $oracle_base                                                              = undef,
   String $oracle_home                                                              = undef,
@@ -61,6 +61,10 @@ define oradb::installdb(
   String $group                                                                    = lookup('oradb::group'),
   String $group_install                                                            = lookup('oradb::group_install'),
   String $group_oper                                                               = lookup('oradb::group_oper'),
+  String $group_backup                                                             = lookup('oradb::group'),
+  String $group_dg                                                                 = lookup('oradb::group'),
+  String $group_km                                                                 = lookup('oradb::group'),
+  String $group_rac                                                                = lookup('oradb::group'),
   String $download_dir                                                             = lookup('oradb::download_dir'),
   Boolean $zip_extract                                                             = true,
   String $puppet_download_mnt_point                                                = lookup('oradb::module_mountpoint'),
@@ -130,14 +134,14 @@ define oradb::installdb(
       }
 
       if ( $version in ['11.2.0.1','12.1.0.1','12.1.0.2']) {
-        $file1 =  "${file}_1of2.zip"
-        $file2 =  "${file}_2of2.zip"
+        $file1 = "${file}_1of2.zip"
+        $file2 = "${file}_2of2.zip"
         $total_files = 2
       }
 
       if ( $version in ['11.2.0.3','11.2.0.4']) {
-        $file1 =  "${file}_1of7.zip"
-        $file2 =  "${file}_2of7.zip"
+        $file1 = "${file}_1of7.zip"
+        $file2 = "${file}_2of7.zip"
         $total_files = 2
       }
 
@@ -209,6 +213,10 @@ define oradb::installdb(
                         'oracle_base'            => $oracle_base,
                         'group_oper'             => $group_oper,
                         'group'                  => $group,
+                        'group_backup'           => $group_backup,
+                        'group_dg'               => $group_dg,
+                        'group_km'               => $group_km,
+                        'group_rac'              => $group_rac,
                         'database_type'          => $database_type,
                         'is_rack_one_install'    => $is_rack_one_install,
                         'ee_optional_components' => $ee_optional_components,
@@ -309,14 +317,16 @@ define oradb::installdb(
             require => [Exec["install oracle database ${title}"],
                           Exec["run root.sh script ${title}"],],
           }
-          exec { "remove oracle db file2 ${file2} ${title}":
-            command => "rm -rf ${download_dir}/${file2}",
-            user    => 'root',
-            group   => 'root',
-            path    => $exec_path,
-            cwd     => $oracle_base,
-            require => [Exec["install oracle database ${title}"],
-                        Exec["run root.sh script ${title}"],],
+          if ( $total_files > 1 ) {
+            exec { "remove oracle db file2 ${file2} ${title}":
+              command => "rm -rf ${download_dir}/${file2}",
+              user    => 'root',
+              group   => 'root',
+              path    => $exec_path,
+              cwd     => $oracle_base,
+              require => [Exec["install oracle database ${title}"],
+                          Exec["run root.sh script ${title}"],],
+            }
           }
         }
       }

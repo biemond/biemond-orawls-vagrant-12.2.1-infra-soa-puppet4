@@ -6,7 +6,7 @@
 <title>
   Defined Type: oradb::database
   
-    &mdash; Documentation by YARD 0.9.8
+    &mdash; Documentation by YARD 0.9.12
   
 </title>
 
@@ -68,6 +68,7 @@
     </dd>
   </dl>
 </div>
+
 <h2>Overview</h2>
 <div class="docstring">
   <div class="discussion">
@@ -350,10 +351,10 @@ oradb::database{ &#39;oraDb&#39;:
         <span class='name'>template_variables</span>
       
       
-        <span class='type'>(<tt>String</tt>)</span>
+        <span class='type'>(<tt>Optional[Hash]</tt>)</span>
       
       
-        <em class="default">(defaults to: <tt>&#39;dummy=/tmp&#39;</tt>)</em>
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
       
       
         &mdash;
@@ -386,7 +387,7 @@ oradb::database{ &#39;oraDb&#39;:
         <span class='name'>db_domain</span>
       
       
-        <span class='type'>(<tt>String</tt>)</span>
+        <span class='type'>(<tt>Optional[String]</tt>)</span>
       
       
         <em class="default">(defaults to: <tt>undef</tt>)</em>
@@ -681,6 +682,19 @@ oradb::database{ &#39;oraDb&#39;:
       
     </li>
   
+    <li>
+      
+        <span class='name'>automatic_memory_management</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>true</tt>)</em>
+      
+      
+    </li>
+  
 </ul>
 
 
@@ -884,7 +898,48 @@ oradb::database{ &#39;oraDb&#39;:
 286
 287
 288
-289</pre>
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330</pre>
       </td>
       <td>
         <pre class="code"><span class="info file"># File 'manifests/database.pp', line 96</span>
@@ -899,9 +954,9 @@ define oradb::database(
   Enum[&#39;create&#39;,&#39;delete&#39;] $action                                 = lookup(&#39;oradb::database::action&#39;),
   Optional[String] $template                                      = undef,
   Optional[String] $template_seeded                               = undef,
-  String $template_variables                                      = &#39;dummy=/tmp&#39;, # for dbt template
+  Optional[Hash] $template_variables                              = undef, # for dbt template
   String $db_name                                                 = lookup(&#39;oradb::database_name&#39;),
-  String $db_domain                                               = undef,
+  Optional[String] $db_domain                                     = undef,
   Integer $db_port                                                = lookup(&#39;oradb::listener_port&#39;),
   String $sys_password                                            = lookup(&#39;oradb::default::password&#39;),
   String $system_password                                         = lookup(&#39;oradb::default::password&#39;),
@@ -923,6 +978,7 @@ define oradb::database(
   Optional[String] $cluster_nodes                                 = undef, # comma separated list with at first the local and at second the remode host e.g. &quot;racnode1,racnode2&quot;
   Boolean $container_database                                     = false, # 12.1 feature for pluggable database
   String $puppet_download_mnt_point                               = lookup(&#39;oradb::module_mountpoint&#39;),
+  Boolean $automatic_memory_management                            = true, # for 12.2 , choose false when more than 4gb memory
 )
 {
 
@@ -955,6 +1011,10 @@ define oradb::database(
     fail(&#39;container or pluggable database is not supported on version 11.2&#39;)
   }
 
+#  if ( $version &gt;= &#39;12.2&#39; and $container_database == false ){
+#    fail(&#39;version 12.2 or higher requires container_database = true&#39;)
+#  }
+
   $exec_path = lookup(&#39;oradb::exec_path&#39;)
   $user_base = lookup(&#39;oradb::user_base_dir&#39;)
   $user_home = &quot;${user_base}/${user}&quot;
@@ -982,29 +1042,30 @@ define oradb::database(
     file { &quot;${download_dir}/database_${sanitized_title}.rsp&quot;:
       ensure  =&gt; present,
       content =&gt; epp(&quot;oradb/dbca_${version}.rsp.epp&quot;,
-                    { &#39;operationType&#39;             =&gt; $operation_type,
-                      &#39;globaldb_name&#39;             =&gt; $globaldb_name,
-                      &#39;db_name&#39;                   =&gt; $db_name,
-                      &#39;cluster_nodes&#39;             =&gt; $cluster_nodes,
-                      &#39;sys_password&#39;              =&gt; $sys_password,
-                      &#39;system_password&#39;           =&gt; $system_password,
-                      &#39;em_configuration&#39;          =&gt; $em_configuration,
-                      &#39;db_snmp_password&#39;          =&gt; $db_snmp_password,
-                      &#39;data_file_destination&#39;     =&gt; $data_file_destination,
-                      &#39;recovery_area_destination&#39; =&gt; $recovery_area_destination,
-                      &#39;storage_type&#39;              =&gt; $storage_type,
-                      &#39;asm_diskgroup&#39;             =&gt; $asm_diskgroup,
-                      &#39;asm_snmp_password&#39;         =&gt; $asm_snmp_password,
-                      &#39;recovery_diskgroup&#39;        =&gt; $recovery_diskgroup,
-                      &#39;character_set&#39;             =&gt; $character_set,
-                      &#39;nationalcharacter_set&#39;     =&gt; $nationalcharacter_set,
-                      &#39;sanitizedInitParams&#39;       =&gt; $sanitized_init_params,
-                      &#39;sample_schema&#39;             =&gt; $sample_schema,
-                      &#39;memory_percentage&#39;         =&gt; $memory_percentage,
-                      &#39;database_type&#39;             =&gt; $database_type,
-                      &#39;memory_total&#39;              =&gt; $memory_total,
-                      &#39;db_port&#39;                   =&gt; $db_port,
-                      &#39;container_database&#39;        =&gt; $container_database }),
+                    { &#39;operationType&#39;               =&gt; $operation_type,
+                      &#39;globaldb_name&#39;               =&gt; $globaldb_name,
+                      &#39;db_name&#39;                     =&gt; $db_name,
+                      &#39;cluster_nodes&#39;               =&gt; $cluster_nodes,
+                      &#39;sys_password&#39;                =&gt; $sys_password,
+                      &#39;system_password&#39;             =&gt; $system_password,
+                      &#39;em_configuration&#39;            =&gt; $em_configuration,
+                      &#39;db_snmp_password&#39;            =&gt; $db_snmp_password,
+                      &#39;data_file_destination&#39;       =&gt; $data_file_destination,
+                      &#39;recovery_area_destination&#39;   =&gt; $recovery_area_destination,
+                      &#39;storage_type&#39;                =&gt; $storage_type,
+                      &#39;asm_diskgroup&#39;               =&gt; $asm_diskgroup,
+                      &#39;asm_snmp_password&#39;           =&gt; $asm_snmp_password,
+                      &#39;recovery_diskgroup&#39;          =&gt; $recovery_diskgroup,
+                      &#39;character_set&#39;               =&gt; $character_set,
+                      &#39;nationalcharacter_set&#39;       =&gt; $nationalcharacter_set,
+                      &#39;sanitizedInitParams&#39;         =&gt; $sanitized_init_params,
+                      &#39;sample_schema&#39;               =&gt; $sample_schema,
+                      &#39;memory_percentage&#39;           =&gt; $memory_percentage,
+                      &#39;database_type&#39;               =&gt; $database_type,
+                      &#39;memory_total&#39;                =&gt; $memory_total,
+                      &#39;db_port&#39;                     =&gt; $db_port,
+                      &#39;container_database&#39;          =&gt; $container_database,
+                      &#39;automatic_memory_management&#39; =&gt; $automatic_memory_management }),
       mode    =&gt; &#39;0770&#39;,
       owner   =&gt; $user,
       group   =&gt; $group,
@@ -1028,24 +1089,58 @@ define oradb::database(
     $templatename = undef
   }
 
+  if ($version == &#39;12.2&#39; and $templatename != undef and $storage_type != undef and $data_file_destination == undef ) {
+    fail(&#39;data_file_destination is required on version 12.2 when storage_type and templaten are defined&#39;)
+  }
+
   $elevation_prefix = &quot;su - ${user} -c \&quot;/bin/ksh -c \\\&quot;&quot;
   $elevation_suffix = &quot;\\\&quot;\&quot;&quot;
 
   if $action == &#39;create&#39; {
     if ( $templatename ) {
-      if ( $version == &#39;11.2&#39; or $container_database == false ) {
-        if ( $cluster_nodes != undef) {
-          $command = &quot;${elevation_prefix}${oracle_home}/bin/dbca -silent -createDatabase -templateName ${templatename} -gdbname ${globaldb_name} -characterSet ${character_set} -responseFile NO_VALUE -sysPassword ${sys_password} -systemPassword ${system_password} -dbsnmpPassword ${db_snmp_password} -asmsnmpPassword ${asm_snmp_password} -storageType ${storage_type} -emConfiguration ${em_configuration} -nodelist ${cluster_nodes} -variables ${template_variables}${elevation_suffix}&quot;
-        } else {
-          $command = &quot;${elevation_prefix}${oracle_home}/bin/dbca -silent -createDatabase -templateName ${templatename} -gdbname ${globaldb_name} -characterSet ${character_set} -responseFile NO_VALUE -sysPassword ${sys_password} -systemPassword ${system_password} -dbsnmpPassword ${db_snmp_password} -asmsnmpPassword ${asm_snmp_password} -storageType ${storage_type} -emConfiguration ${em_configuration} -variables ${template_variables}${elevation_suffix}&quot;
-        }
-      } else {
-        if( $cluster_nodes != undef) {
-          $command = &quot;${elevation_prefix}${oracle_home}/bin/dbca -silent -createDatabase -templateName ${templatename} -gdbname ${globaldb_name} -characterSet ${character_set} -createAsContainerDatabase ${container_database} -responseFile NO_VALUE -sysPassword ${sys_password} -systemPassword ${system_password} -dbsnmpPassword ${db_snmp_password} -asmsnmpPassword ${asm_snmp_password} -storageType ${storage_type} -emConfiguration ${em_configuration} -nodelist ${cluster_nodes} -variables ${template_variables}${elevation_suffix}&quot;
-        } else {
-          $command = &quot;${elevation_prefix}${oracle_home}/bin/dbca -silent -createDatabase -templateName ${templatename} -gdbname ${globaldb_name} -characterSet ${character_set} -createAsContainerDatabase ${container_database} -responseFile NO_VALUE -sysPassword ${sys_password} -systemPassword ${system_password} -dbsnmpPassword ${db_snmp_password} -asmsnmpPassword ${asm_snmp_password} -storageType ${storage_type} -emConfiguration ${em_configuration} -variables ${template_variables}${elevation_suffix}&quot;
+
+      if ( $template_variables != undef ) {
+        file { &quot;${download_dir}/vars_${sanitized_title}.txt&quot;:
+          ensure  =&gt; present,
+          content =&gt; epp(&#39;oradb/dbca_vars.epp&#39;, { &#39;vars&#39; =&gt; $template_variables }),
+          mode    =&gt; &#39;0775&#39;,
+          owner   =&gt; $user,
+          group   =&gt; $group,
+          before  =&gt; Exec[&quot;oracle database ${title}&quot;],
         }
       }
+
+      if ( $version == &#39;11.2&#39; or $container_database == false ) {
+        $command_pre = &quot;${elevation_prefix}${oracle_home}/bin/dbca -silent -createDatabase -templateName ${templatename} -gdbname ${globaldb_name} -sid ${db_name} -characterSet ${character_set} -responseFile NO_VALUE -sysPassword ${sys_password} -systemPassword ${system_password} -dbsnmpPassword ${db_snmp_password} -asmsnmpPassword ${asm_snmp_password} -storageType ${storage_type} -emConfiguration ${em_configuration} &quot;
+      } else {
+        $command_pre = &quot;${elevation_prefix}${oracle_home}/bin/dbca -silent -createDatabase -templateName ${templatename} -gdbname ${globaldb_name} -sid ${db_name} -characterSet ${character_set} -createAsContainerDatabase ${container_database} -responseFile NO_VALUE -sysPassword ${sys_password} -systemPassword ${system_password} -dbsnmpPassword ${db_snmp_password} -asmsnmpPassword ${asm_snmp_password} -storageType ${storage_type} -emConfiguration ${em_configuration} &quot;
+      }
+
+      if ( $template_variables != undef) {
+        $command_var = &quot; -variablesFile ${download_dir}/vars_${sanitized_title}.txt&quot;
+      } else {
+        $command_var = &#39;&#39;
+      }
+
+      if ( $data_file_destination != undef) {
+        $command_data_file = &quot; -datafileDestination ${data_file_destination}&quot;
+      } else {
+        $command_data_file = &#39;&#39;
+      }
+
+      if ( $init_params != undef) {
+        $command_init = &quot; -initParams ${sanitized_init_params}&quot;
+      } else {
+        $command_init = &#39;&#39;
+      }
+
+      if ( $cluster_nodes != undef) {
+        $command_nodes = &quot; -nodelist ${cluster_nodes}&quot;
+      } else {
+        $command_nodes = &#39;&#39;
+      }
+      $command = &quot;${command_pre} ${data_file_destination} ${command_var} ${command_init} ${command_nodes} ${elevation_suffix}&quot;
+
     } else {
       if ( $version == &#39;12.2&#39; ) {
         $command = &quot;${elevation_prefix}${oracle_home}/bin/dbca -silent -createDatabase -responseFile ${download_dir}/database_${sanitized_title}.rsp${elevation_suffix}&quot;
@@ -1053,6 +1148,7 @@ define oradb::database(
         $command = &quot;${elevation_prefix}${oracle_home}/bin/dbca -silent -responseFile ${download_dir}/database_${sanitized_title}.rsp${elevation_suffix}&quot;
       }
     }
+
     exec { &quot;oracle database ${title}&quot;:
       command     =&gt; $command,
       creates     =&gt; &quot;${oracle_base}/admin/${db_name}&quot;,
@@ -1090,9 +1186,7 @@ define oradb::database(
 </div>
 
       <div id="footer">
-  Generated on Sun Feb 26 10:48:45 2017 by
-  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.9.8 (ruby-2.3.1).
+     Generated by <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>.
 </div>
 
     </div>

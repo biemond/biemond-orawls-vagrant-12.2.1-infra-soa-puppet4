@@ -54,7 +54,7 @@ describe 'oradb::installdb', :type => :define do
 
     it do
       expect { should contain_notify("oradb::installdb /oracle/product/11.2/db does not exists")
-             }.to raise_error(Puppet::Error, /Unrecognized database type, please use EE|SE|SEONE/)
+             }.to raise_error(Puppet::Error, /Unrecognized database type, please use EE|SE|SEONE|SE2|HP|XP|PE/)
     end
 
   end
@@ -147,9 +147,7 @@ describe 'oradb::installdb', :type => :define do
           :file                    => 'linuxamd64_11gR2_database',
           :database_type            => 'SE',
           :oracle_base              => 123,
-          :oracle_base              => '/oracle',
           :oracle_home              => 123,
-          :user                    => 'oracle',
           :group                   => 'dba',
           :group_install           => 'oinstall',
           :group_oper              => 'oper',

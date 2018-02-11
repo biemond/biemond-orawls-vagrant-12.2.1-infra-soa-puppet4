@@ -9,7 +9,7 @@
 #    oracle_home  => '/opt/oracle/product/11g',
 #    db_name      => 'ORCL',
 #    user         => 'oracle',
-#    service_name => 'dbora',
+#    service_name => 'dbora'
 #  }
 #
 # @param oracle_home
@@ -21,7 +21,7 @@ define oradb::autostartdatabase(
   String $oracle_home  = undef,
   String $db_name      = lookup('oradb::database_name'),
   String $user         = lookup('oradb::user'),
-  String $service_name = lookup('oradb::host::service_name'),
+  String $service_name = lookup('oradb::host::service_name')
 ){
 
   class { 'oradb::prepareautostart':
@@ -46,13 +46,12 @@ define oradb::autostartdatabase(
     }
   }
 
-  exec { "set dbora ${db_name}:${oracle_home}":
+  exec { "set ${service_name} ${db_name}:${oracle_home}":
     command   => $sed_command,
     unless    => "/bin/grep '^${db_name}:${oracle_home}:Y' ${oratab}",
-    require   => File["${dbora_location}/dbora"],
+    require   => File["${dbora_location}/${service_name}"],
     path      => $exec_path,
     logoutput => true,
   }
 
 }
-

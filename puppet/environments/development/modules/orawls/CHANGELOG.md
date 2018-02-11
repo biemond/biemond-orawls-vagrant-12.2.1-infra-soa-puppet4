@@ -1,5 +1,55 @@
 # History
 
+## 2.0.13
+- wls_server add log_rotationdir attribute
+- Domain support for 12.2.1.3
+
+## 2.0.12
+- forms 11g patch fix
+- wls_domain new attribute cdi_implicit_bean_discovery_enabled
+- storeuserconfig new parameter extra_arguments
+
+## 2.0.11
+- support welogic + FMW 12.2.1.2 & 12.2.1.3
+- packdomain managed option
+- Client ID on the JMS connection factory wls type
+- Store userconfig not supports t3 secure port 
+- forms 12c domain creation + RCU
+- jms server wls type new attribute messages_maximum
+
+## 2.0.10
+- better adminserver control status check
+- more allow $ in the weblogic password
+- better datasource index check
+- datasource new attributes StatementTimeout, LoginDelaySeconds 
+
+## 2.0.9
+- add webcenter sites, support for wcs domain
+- allow $ in the weblogic password
+- hide trust_keystore_passphrase output in wls_settings
+
+## 2.0.8
+- wls_datasource new attributes datasourcetype, statementcachetype
+- wls_jdbc_persistence_store new attributes distribution_policy, migration_policy
+- 12.2.1 ohs/webtier standalone domain fixes
+- nodemanager linux netstat check use bash in su command
+
+## 2.0.7
+- wls_setting has tmp_path parameter for the wls types index output, wls types index output is now uinque for every value/domain of wls_setting
+- get_attribute_value for index files of the wls types to handle all data types on the right way, located in common.py.erb
+- added weblogic user to the enroll py script on copydomain manifest
+
+## 2.0.6
+- fix nil or '' values on onprovider_specific of wls_authentication_provider
+- be able to set orainstpath_dir parameter on weblogic, weblogic_type and fmw
+
+## 2.0.5
+- Fix ohs domain for 12.1.3 webtier
+- Added FMW cleanup on the extract directory and on the FMW files when remote file = true
+
+## 2.0.4
+- Allow forward slash in the wls type title name, old title regex for detecting the wls_setting name was too eager but the use of slash in the wls_setting name is now not allowed anymore.
+
 ## 2.0.3
 - added oim_configured function check to oimconfig.pp
 

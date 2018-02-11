@@ -13,9 +13,9 @@ oradb::grid::group_install: 'oinstall'
 oradb::grid::group_oper:    'asmoper'
 oradb::grid::group_asm:     'asmadmin'
 
-oradb::tmp_dir:      '/var/tmp/install'
+oradb::tmp_dir:           '/tmp'
 oradb::download_dir:      '/var/tmp/install'
-oradb::module_mountpoint: 'puppet:///modules/oradb/'
+oradb::module_mountpoint: 'oradb/'
 
 oradb::version:           '12.1'
 oradb::listener_port:     1521
@@ -41,11 +41,6 @@ oradb::grid_versions:
  - '12.1.0.1'
  - '12.1.0.2'
  - '12.2.0.1'
- 
-# check on all supported enterprise manager versions
-oradb::enterprise_manager_versions:
- - '12.1.0.4'
- - '12.1.0.5'
 
 # check on all supported enterprise agent versions
 oradb::enterprise_manager_agent_versions:
@@ -76,6 +71,10 @@ oradb::database_types:
  - 'EE'
  - 'SE'
  - 'SEONE'
+ - 'SE2'
+ - 'HP'
+ - 'XP'
+ - 'PE'
 
 # full versions which can be downloaded at OTN
 oradb::versions_full:

@@ -112,7 +112,6 @@ define orawls::weblogic_type (
     logoutput => $log_output,
   }
 
-  $oraInstPath = lookup('orawls::orainst_dir')
   $java_statement = "${lookup('orawls::java')} ${java_parameters}"
   $file_ext = regsubst($filename, '.*(\.jar)$', '\1')
 
@@ -149,6 +148,7 @@ define orawls::weblogic_type (
   orawls::utils::orainst { "weblogic orainst ${title}":
     ora_inventory_dir => $ora_inventory_dir,
     os_group          => $os_group,
+    orainstpath_dir   => $orainstpath_dir
   }
 
   wls_directory_structure{"weblogic structure ${title}":
@@ -211,7 +211,7 @@ define orawls::weblogic_type (
 
     # notify { "install weblogic ${version}: ${exec_path}": }
     exec { "install weblogic ${title}":
-      command     => "${cmd_prefix}${weblogic_jar_location} ${command} -invPtrLoc ${oraInstPath}/oraInst.loc -ignoreSysPrereqs",
+      command     => "${cmd_prefix}${weblogic_jar_location} ${command} -invPtrLoc ${orainstpath_dir}/oraInst.loc -ignoreSysPrereqs",
       environment => ['JAVA_VENDOR=Sun', "JAVA_HOME=${jdk_home_dir}"],
       timeout     => 0,
       creates     => $created_dir,
@@ -223,16 +223,14 @@ define orawls::weblogic_type (
                       File["${download_dir}/weblogic_silent_install_${title}.xml"]],
     }
     # OPatch native lib fix for 64 solaris
-    case $facts['kernel'] {
-      'SunOS': {
-        exec { "add -d64 oraparam.ini oracle_common ${title}":
-          command => "sed -e's/JRE_MEMORY_OPTIONS=/JRE_MEMORY_OPTIONS=\"-d64\"/g' ${middleware_home_dir}/oui/oraparam.ini > ${temp_dir}/wls.tmp && mv ${temp_dir}/wls.tmp ${middleware_home_dir}/oui/oraparam.ini",
-          unless  => "grep 'JRE_MEMORY_OPTIONS=\"-d64\"' ${middleware_home_dir}/oui/oraparam.ini",
-          require => Exec["install weblogic ${title}"],
-          path    => $exec_path,
-          user    => $os_user,
-          group   => $os_group,
-        }
+    if ( $facts['kernel'] == 'SunOS' ) {
+      exec { "add -d64 oraparam.ini oracle_common ${title}":
+        command => "sed -e's/JRE_MEMORY_OPTIONS=/JRE_MEMORY_OPTIONS=\"-d64\"/g' ${middleware_home_dir}/oui/oraparam.ini > ${temp_dir}/wls.tmp && mv ${temp_dir}/wls.tmp ${middleware_home_dir}/oui/oraparam.ini",
+        unless  => "grep 'JRE_MEMORY_OPTIONS=\"-d64\"' ${middleware_home_dir}/oui/oraparam.ini",
+        require => Exec["install weblogic ${title}"],
+        path    => $exec_path,
+        user    => $os_user,
+        group   => $os_group,
       }
     }
 

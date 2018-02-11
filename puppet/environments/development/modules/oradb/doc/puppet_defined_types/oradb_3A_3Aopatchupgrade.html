@@ -6,7 +6,7 @@
 <title>
   Defined Type: oradb::opatchupgrade
   
-    &mdash; Documentation by YARD 0.9.8
+    &mdash; Documentation by YARD 0.9.12
   
 </title>
 
@@ -68,6 +68,7 @@
     </dd>
   </dl>
 </div>
+
 <h2>Overview</h2>
 <div class="docstring">
   <div class="discussion">
@@ -267,6 +268,19 @@ oradb::opatchupgrade{&#39;112000_opatch_upgrade&#39;:
       
     </li>
   
+    <li>
+      
+        <span class='name'>remote_file</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>true</tt>)</em>
+      
+      
+    </li>
+  
 </ul>
 
 
@@ -379,7 +393,23 @@ oradb::opatchupgrade{&#39;112000_opatch_upgrade&#39;:
 129
 130
 131
-132</pre>
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148</pre>
       </td>
       <td>
         <pre class="code"><span class="info file"># File 'manifests/opatchupgrade.pp', line 30</span>
@@ -394,6 +424,7 @@ define oradb::opatchupgrade(
   String $group                     = lookup(&#39;oradb::group&#39;),
   String $download_dir              = lookup(&#39;oradb::download_dir&#39;),
   String $puppet_download_mnt_point = lookup(&#39;oradb::module_mountpoint&#39;),
+  Boolean $remote_file              = true,
 ){
   $exec_path = lookup(&#39;oradb::exec_path&#39;)
   $patch_dir = &quot;${oracle_home}/OPatch&quot;
@@ -404,7 +435,7 @@ define oradb::opatchupgrade(
   }
 
   # check the opatch version
-  $installed_version  = oradb::opatch_version($oracle_home)
+  $installed_version = oradb::opatch_version($oracle_home)
 
   if $installed_version == $opversion {
     $continue = false
@@ -414,15 +445,16 @@ define oradb::opatchupgrade(
   }
 
   if ( $continue ) {
-
-    if ! defined(File[&quot;${download_dir}/${patch_file}&quot;]) {
-      file {&quot;${download_dir}/${patch_file}&quot;:
-        ensure =&gt; present,
-        path   =&gt; &quot;${download_dir}/${patch_file}&quot;,
-        source =&gt; &quot;${puppet_download_mnt_point}/${patch_file}&quot;,
-        mode   =&gt; &#39;0775&#39;,
-        owner  =&gt; $user,
-        group  =&gt; $group,
+    if $remote_file == true {
+      if ! defined(File[&quot;${download_dir}/${patch_file}&quot;]) {
+        file {&quot;${download_dir}/${patch_file}&quot;:
+          ensure =&gt; present,
+          path   =&gt; &quot;${download_dir}/${patch_file}&quot;,
+          source =&gt; &quot;${puppet_download_mnt_point}/${patch_file}&quot;,
+          mode   =&gt; &#39;0775&#39;,
+          owner  =&gt; $user,
+          group  =&gt; $group,
+        }
       }
     }
 
@@ -432,54 +464,68 @@ define oradb::opatchupgrade(
           ensure  =&gt; absent,
           recurse =&gt; true,
           force   =&gt; true,
-        } -&gt;
-        exec { &quot;extract opatch ${title} ${patch_file}&quot;:
-          command   =&gt; &quot;unzip -o ${download_dir}/${patch_file} -d ${oracle_home}&quot;,
-          path      =&gt; $exec_path,
-          user      =&gt; $user,
-          group     =&gt; $group,
-          logoutput =&gt; false,
-          require   =&gt; File[&quot;${download_dir}/${patch_file}&quot;],
         }
 
-        if ( $csi_number != undef and support_id != undef ) {
-          exec { &quot;exec emocmrsp ${title} ${opversion}&quot;:
-            cwd       =&gt; $patch_dir,
-            command   =&gt; &quot;${patch_dir}/ocm/bin/emocmrsp -repeater NONE ${csi_number} ${support_id}&quot;,
+        if $remote_file == true {
+          exec { &quot;extract opatch ${title} ${patch_file}&quot;:
+            command   =&gt; &quot;unzip -o ${download_dir}/${patch_file} -d ${oracle_home}&quot;,
             path      =&gt; $exec_path,
             user      =&gt; $user,
             group     =&gt; $group,
-            logoutput =&gt; true,
-            require   =&gt; Exec[&quot;extract opatch ${patch_file}&quot;],
+            logoutput =&gt; false,
+            require   =&gt; [File[&quot;${download_dir}/${patch_file}&quot;],File[$patch_dir]],
           }
         } else {
-
-          if ! defined(Package[&#39;expect&#39;]) {
-            package { &#39;expect&#39;:
-              ensure  =&gt; present,
-            }
-          }
-
-          file { &quot;${download_dir}/opatch_upgrade_${title}_${opversion}.ksh&quot;:
-            ensure  =&gt; present,
-            content =&gt; epp(&#39;oradb/ocm.rsp.epp&#39;, { &#39;patchDir&#39; =&gt; $patch_dir }),
-            mode    =&gt; &#39;0775&#39;,
-            owner   =&gt; $user,
-            group   =&gt; $group,
-          }
-
-          exec { &quot;ksh ${download_dir}/opatch_upgrade_${title}_${opversion}.ksh&quot;:
-            cwd       =&gt; $patch_dir,
+          exec { &quot;extract opatch ${title} ${patch_file}&quot;:
+            command   =&gt; &quot;unzip -o ${puppet_download_mnt_point}/${patch_file} -d ${oracle_home}&quot;,
             path      =&gt; $exec_path,
             user      =&gt; $user,
             group     =&gt; $group,
-            logoutput =&gt; true,
-            require   =&gt; [File[&quot;${download_dir}/opatch_upgrade_${title}_${opversion}.ksh&quot;],
-                          Exec[&quot;extract opatch ${title} ${patch_file}&quot;],
-                          Package[&#39;expect&#39;],],
+            logoutput =&gt; false,
+            require   =&gt; File[$patch_dir],
           }
         }
 
+        # version lower than, do emocmrsp
+        if ( versioncmp($opversion, &#39;12.2.0.1.5&#39;) == -1 ) {
+          if ( $csi_number != undef and support_id != undef ) {
+            exec { &quot;exec emocmrsp ${title} ${opversion}&quot;:
+              cwd       =&gt; $patch_dir,
+              command   =&gt; &quot;${patch_dir}/ocm/bin/emocmrsp -repeater NONE ${csi_number} ${support_id}&quot;,
+              path      =&gt; $exec_path,
+              user      =&gt; $user,
+              group     =&gt; $group,
+              logoutput =&gt; true,
+              require   =&gt; Exec[&quot;extract opatch ${title} ${patch_file}&quot;],
+            }
+          } else {
+
+            if ! defined(Package[&#39;expect&#39;]) {
+              package { &#39;expect&#39;:
+                ensure =&gt; present,
+              }
+            }
+
+            file { &quot;${download_dir}/opatch_upgrade_${title}_${opversion}.ksh&quot;:
+              ensure  =&gt; present,
+              content =&gt; epp(&#39;oradb/ocm.rsp.epp&#39;, { &#39;patchDir&#39; =&gt; $patch_dir }),
+              mode    =&gt; &#39;0775&#39;,
+              owner   =&gt; $user,
+              group   =&gt; $group,
+            }
+
+            exec { &quot;ksh ${download_dir}/opatch_upgrade_${title}_${opversion}.ksh&quot;:
+              cwd       =&gt; $patch_dir,
+              path      =&gt; $exec_path,
+              user      =&gt; $user,
+              group     =&gt; $group,
+              logoutput =&gt; true,
+              require   =&gt; [File[&quot;${download_dir}/opatch_upgrade_${title}_${opversion}.ksh&quot;],
+                            Exec[&quot;extract opatch ${title} ${patch_file}&quot;],
+                            Package[&#39;expect&#39;],],
+            }
+          }
+        }
       }
       default: {
         fail(&#39;Unrecognized operating system&#39;)
@@ -494,9 +540,7 @@ define oradb::opatchupgrade(
 </div>
 
       <div id="footer">
-  Generated on Sun Feb 26 10:48:46 2017 by
-  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.9.8 (ruby-2.3.1).
+     Generated by <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>.
 </div>
 
     </div>

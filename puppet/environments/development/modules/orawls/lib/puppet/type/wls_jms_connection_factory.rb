@@ -48,6 +48,7 @@ module Puppet
     property :defaulttargeting
     property :transactiontimeout
     property :xaenabled
+    property :clientid
     property :clientidpolicy
     property :subscriptionsharingpolicy
     property :messagesmaximum
@@ -59,7 +60,7 @@ module Puppet
     property :defaultredeliverydelay
 
     add_title_attributes(:jmsmodule, :connection_factory_name) do
-      /^((.*\/)?(.*):(.*)?)$/
+      /^((.*?\/)?(.*):(.*)?)$/
     end
 
   end
